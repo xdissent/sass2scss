@@ -6,6 +6,13 @@
 #include <sstream>
 #include <iostream>
 
+#ifndef BUFFERSIZE
+#define BUFFERSIZE 255
+#endif
+
+#include <b64/encode.h>
+#include <sourcemap.h>
+
 #ifndef SASS2SCSS_VERSION
 #define SASS2SCSS_VERSION "[NA]"
 #endif
