@@ -47,6 +47,10 @@ int main (int argc, char** argv)
 		{
 			options |= SASS2SCSS_CONVERT_COMMENT;
 		}
+		else if (arg == "-m" || arg == "--map")
+		{
+			options |= SASS2SCSS_SOURCE_MAP;
+		}
 
 		// Items for printing output and exit
 		else if (arg == "-h" || arg == "--help")
@@ -57,6 +61,7 @@ int main (int argc, char** argv)
 			cout << "-c, --convert      convert src comments" << endl;
 			cout << "-s, --strip        strip all comments" << endl;
 			cout << "-k, --keep         keep all comments" << endl;
+			cout << "-m, --map          add source map" << endl;
 			cout << "-h, --help         help text" << endl;
 			cout << "-v, --version      version information" << endl;
 			exit(0);

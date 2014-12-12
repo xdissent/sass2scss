@@ -36,6 +36,9 @@ namespace Sass
 	const int SASS2SCSS_STRIP_COMMENT   =  64;
 	// convert one-line to multi-line
 	const int SASS2SCSS_CONVERT_COMMENT = 128;
+	// add sourcemap
+	const int SASS2SCSS_SOURCE_MAP      = 256;
+
 
 	// String for finding something interesting
 	const string SASS2SCSS_FIND_WHITESPACE = " \t\n\v\f\r";
@@ -86,6 +89,8 @@ extern "C" {
 	#define SASS2SCSS_STRIP_COMMENT    64
 	// convert one-line to multi-line
 	#define SASS2SCSS_CONVERT_COMMENT  128
+	// add sourcemap
+	#define SASS2SCSS_SOURCE_MAP  256
 
 	// available to c and c++ code
 	char* sass2scss (const char* sass, const int options);

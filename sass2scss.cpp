@@ -29,11 +29,12 @@ namespace Sass
 {
 
 	// return the actual prettify value from options
-	#define PRETTIFY(converter) (converter.options - (converter.options & 248))
+	#define PRETTIFY(converter) (converter.options - (converter.options & 504))
 	// query the options integer to check if the option is enables
 	#define KEEP_COMMENT(converter) ((converter.options & SASS2SCSS_KEEP_COMMENT) == SASS2SCSS_KEEP_COMMENT)
 	#define STRIP_COMMENT(converter) ((converter.options & SASS2SCSS_STRIP_COMMENT) == SASS2SCSS_STRIP_COMMENT)
 	#define CONVERT_COMMENT(converter) ((converter.options & SASS2SCSS_CONVERT_COMMENT) == SASS2SCSS_CONVERT_COMMENT)
+	#define ADD_SOURCE_MAP(converter) ((converter.options & SASS2SCSS_SOURCE_MAP) == SASS2SCSS_SOURCE_MAP)
 
 	// some makros to access the indentation stack
 	#define INDENT(converter) (converter.indents.top())
@@ -792,9 +793,38 @@ namespace Sass
 		converter.indents.push("");
 		converter.options = options;
 
+		// create sourcemap
+		SourceMap::SrcMap* sourcemap = new SourceMap::SrcMap();
+		sourcemap->file = "sass2scss.scss";
+		sourcemap->addSource("sass2scss.sass");
+		sourcemap->contents.push_back(sass);
+		size_t input_line_no = 0;
+		size_t output_line_no = 0;
+		size_t output_col = 0;
+
 		// read line by line and process them
 		while(safeGetline(stream, line) && !stream.eof())
-		{ scss += process(line, converter); }
+		{
+			string processed = process(line, converter);
+			scss += processed;
+
+			if (ADD_SOURCE_MAP(converter)) {
+				size_t added_lines = 0;
+				string processed_line;
+				istringstream processed_stream(processed);
+				while(getline(processed_stream, processed_line))
+				{
+					if (added_lines > 0) {
+						output_col = 0;
+						output_line_no++;
+					}
+					sourcemap->insert(output_line_no, SourceMap::Entry(output_col, 0, input_line_no, 0));
+					output_col += processed_line.size();
+					added_lines++;
+				}
+				input_line_no++;
+			}
+		}
 
 		// create mutable string
 		string closer = "";
@@ -802,6 +832,19 @@ namespace Sass
 		converter.end_of_file = true;
 		// process to close all open blocks
 		scss += process(closer, converter);
+
+		// add sourcemap
+		if (ADD_SOURCE_MAP(converter)) {
+			string map(sourcemap->serialize());
+			istringstream is(map);
+			ostringstream buffer;
+			base64::encoder E;
+			E.encode(is, buffer);
+			string url = "data:application/json;base64," + buffer.str();
+			url.erase(url.size() - 1);
+			if (PRETTIFY(converter) > 0) scss += "\n";
+			scss += "/*# sourceMappingURL=" + url + " */";
+		}
 
 		// allocate new memory on the heap
 		// caller has to free it after use
